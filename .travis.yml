@@ -18,7 +18,9 @@ env:
   - distribution: ubuntu
     version: 14.04
     init: /sbin/init
-    run_opts: ""
+## forced to be privileged as we change iptables rules
+    run_opts: "--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
+#    run_opts: ""
 #  - distribution: ubuntu
 #    version: 12.04
 #    init: /sbin/init
