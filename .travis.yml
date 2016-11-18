@@ -45,7 +45,7 @@ before_install:
 script:
   - container_id=$(mktemp)
     # Run container in detached state
-  - 'sudo docker run --detach --volume="${PWD%/*}":/etc/ansible/roles:ro ${run_opts} ${distribution}-${version}:ansible "${init}" > "${container_id}"'
+  - 'sudo docker run -h localhost --detach --volume="${PWD%/*}":/etc/ansible/roles:ro ${run_opts} ${distribution}-${version}:ansible "${init}" > "${container_id}"'
 
   - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible --version'
 
@@ -66,7 +66,7 @@ script:
 
   # serverspec tests
 ## travis/docker: Errno::EROFS: Read-only file system @ dir_s_mkdir - /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/serverspec/.bundle
-#  - 'sudo docker exec --tty "$(cat ${container_id})" /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/serverspec/run-local-tests.sh'
+  - 'sudo docker exec --tty "$(cat ${container_id})" /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/serverspec/run-local-tests.sh'
 
   # Clean up
   - 'sudo docker stop "$(cat ${container_id})"'
