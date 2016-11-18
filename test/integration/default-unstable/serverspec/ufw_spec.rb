@@ -1,4 +1,8 @@
-require 'spec_helper'
+require 'serverspec'
+
+# Required by serverspec
+set :backend, :exec
+
 
 ufw_expected_rules = [
   %r{ 22/tcp + ALLOW IN +Anywhere},

@@ -3,10 +3,10 @@ server_names_hash_bucket_size 64;
 server {
     listen 80;
     server_name {{ jitsi_meet_server_name }};
-    return 301 https://$host$request_uri;
+    return 301 https://$host:{{ jitsi_meet_nginx_https_port }}$request_uri;
 }
 server {
-    listen 443 ssl;
+    listen {{ jitsi_meet_nginx_https_port }} ssl;
     server_name {{ jitsi_meet_server_name }};
 
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -14,6 +14,10 @@ server {
     ssl_ciphers "EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA256:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EDH+aRSA+AESGCM:EDH+aRSA+SHA256:EDH+aRSA:EECDH:!aNULL:!eNULL:!MEDIUM:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SEED";
 
     add_header Strict-Transport-Security "max-age=31536000";
+#    add_header X-Content-Type-Options nosniff;
+#    add_header X-Frame-Options SAMEORIGIN;
+#    add_header X-XSS-Protection "1; mode=block";
+#    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';";
 
     ssl_certificate {{ jitsi_meet_ssl_cert_path }};
     ssl_certificate_key {{ jitsi_meet_ssl_key_path }};

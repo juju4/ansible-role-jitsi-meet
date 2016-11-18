@@ -1,0 +1,9 @@
+---
+- name: Test jitsi-meet role
+  hosts: all
+  vars:
+#    - jitsi_meet_server_name: "{{ ansible_fqdn }}"
+    - jitsi_meet_server_name: "localhost"
+  roles:
+    - role: ansible-role-jitsi-meet
+
