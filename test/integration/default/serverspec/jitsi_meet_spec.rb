@@ -39,3 +39,20 @@ describe file('/etc/jitsi/meet/localhost-config.js') do
   its('content') { should match(%r{^\s+bosh: '//localhost/http-bind',}) }
   its('content') { should match(/^\s+disableThirdPartyRequests: true,/) }
 end
+
+describe file('/var/log/jitsi/jvb.log') do
+  its(:size) { should > 0 }
+## JVB 2016-11-19 03:39:56.449 SEVERE: [17] org.jitsi.meet.ComponentMain.call().278 host-unknown, host:localhost, port:5347
+#  its('content') { should_not match(/SEVERE/) }
+end
+describe file('/var/log/jitsi/jicofo.log') do
+  its(:size) { should > 0 }
+## Jicofo 2016-11-19 03:25:26.223 SEVERE: [32] org.jivesoftware.smack.PacketReader.notifyConnectionError() Closes the connection temporary
+## stream:error (text)
+#  its('content') { should_not match(/SEVERE/) }
+end
+describe file('/var/log/prosody/prosody.log') do
+  its(:size) { should > 0 }
+end
+
+

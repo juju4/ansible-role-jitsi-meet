@@ -138,6 +138,17 @@ Including an example of how to use your role (for instance, with variables passe
       jitsi_meet_ssl_key_path: "/etc/letsencrypt/live/{{ jitsi_meet_server_name }}/privkey.pem"
       become: yes
       tags: jitsi
+
+## Alternative
+- name: Configure jitsi-meet server (2).
+  hosts: jitsi
+  vars:
+    - jitsi_meet_ssl_generate: 'letsencrypt'
+    - jitsi_meet_server_name: "{{ ansible_default_ipv4.address }}.xip.io"
+  roles:
+    - ansible-role-jitsi-meet
+      become: yes
+
 ```
 
 Running the tests

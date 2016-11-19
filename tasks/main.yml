@@ -21,6 +21,7 @@
 
 ## this block should be before package install else jitsi packages are generating one
 - block:
+    ## nginx must be present and accessible through port 80 to validate http challenge
     - name: ensure nginx is installed
       package: name=nginx state=present
     - name: ensure default virtualhost is active
@@ -39,6 +40,14 @@
   when: jitsi_meet_ssl_cert_path == '' and
         jitsi_meet_ssl_key_path == '' and
         jitsi_meet_ssl_generate == 'letsencrypt'
+
+- block:
+    - set_fact:
+        jitsi_meet_ssl_cert_path: "{{ ssl_dir }}/localhost.crt"
+        jitsi_meet_ssl_key_path: "{{ ssl_privatedir }}/localhost.key"
+  when: jitsi_meet_ssl_cert_path == '' and
+        jitsi_meet_ssl_key_path == '' and
+        jitsi_meet_ssl_generate == ''
 
 - include: packages.yml
 

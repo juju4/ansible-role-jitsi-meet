@@ -1,5 +1,8 @@
 ---
 
+- name: ensure nginx package is present
+  package: name=nginx state=present
+
 - name: Copy Nginx config for Jitsi Meet domain.
   template:
     dest: "/etc/nginx/sites-available/{{ jitsi_meet_server_name }}.conf"
