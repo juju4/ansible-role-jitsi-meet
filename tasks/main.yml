@@ -18,6 +18,28 @@
   action: setup
 #- debug: var=ansible_fqdn
 
+
+## this block should be before package install else jitsi packages are generating one
+- block:
+    - name: ensure nginx is installed
+      package: name=nginx state=present
+    - name: ensure default virtualhost is active
+      file: src=/etc/nginx/sites-available/default dest=/etc/nginx/sites-enabled/default state=link
+      register: defvirtualhost
+    - name: ensure no conflict
+      file: "dest=/etc/nginx/sites-enabled/{{ ansible_fqdn }}.conf state=absent"
+      register: defconf2
+    - name: restart nginx service
+      service: name=nginx state=restarted
+      when: defvirtualhost.changed or defconf2.changed
+    - include: certificate-letsencrypt.yml
+    - set_fact:
+        jitsi_meet_ssl_cert_path: "{{ ssl_dir }}/{{ ansible_fqdn }}.crt"
+        jitsi_meet_ssl_key_path: "{{ ssl_privatedir }}/{{ ansible_fqdn }}.key"
+  when: jitsi_meet_ssl_cert_path == '' and
+        jitsi_meet_ssl_key_path == '' and
+        jitsi_meet_ssl_generate == 'letsencrypt'
+
 - include: packages.yml
 
   # Read Jitsi Meet config files and extract secrets for use in template configs.

@@ -13,6 +13,7 @@
     - 22
     - 80
     - 443
+    - "{{ jitsi_meet_nginx_https_port }}"
 
 - name: Open UDP port 10000 for jitsi-videobridge
   ufw:

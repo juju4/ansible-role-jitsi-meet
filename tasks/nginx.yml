@@ -1,26 +1,5 @@
 ---
 
-- block:
-    - include: certificate-selfsigned.yml
-    - set_fact:
-        jitsi_meet_ssl_cert_path: "{{ ssl_dir }}/{{ ansible_fqdn }}.crt"
-        jitsi_meet_ssl_key_path: "{{ ssl_privatedir }}/{{ ansible_fqdn }}.key"
-  when: jitsi_meet_ssl_cert_path == '' and
-        jitsi_meet_ssl_key_path == '' and
-        jitsi_meet_ssl_generate == 'selfsigned'
-
-- block:
-    - include: certificate-letsencrypt.yml
-    - set_fact:
-        jitsi_meet_ssl_cert_path: "{{ ssl_dir }}/{{ ansible_fqdn }}.crt"
-        jitsi_meet_ssl_key_path: "{{ ssl_privatedir }}/{{ ansible_fqdn }}.key"
-  when: jitsi_meet_ssl_cert_path == '' and
-        jitsi_meet_ssl_key_path == '' and
-        jitsi_meet_ssl_generate == 'letsencrypt'
-
-- name: ensure nginx is installed
-  package: name=nginx state=present
-
 - name: Copy Nginx config for Jitsi Meet domain.
   template:
     dest: "/etc/nginx/sites-available/{{ jitsi_meet_server_name }}.conf"

@@ -2,6 +2,15 @@
 
 ## require ansible v2.2 for letsencrypt module
 
+- set_fact:
+    hardenwebserver_certinfo: '/C=US/ST=CA/L=San Francisco/O=Ansible'
+    hardenwebserver_certduration: 1095
+#    hardenwebserver_letsencrypt_acme_dir: 'https://acme-staging.api.letsencrypt.org/directory'
+    hardenwebserver_letsencrypt_acme_dir: 'https://acme-v01.api.letsencrypt.org/directory'
+    hardenwebserver_rootdir: /var/www/html
+## Travis error: "asn1 encoding routines:ASN1_mbstring_ncopy:string too longi:a_mbstr.c:154:maxsize=64" as cn=testing-gce-4d114f77-0ff1-41fb-bd33-22879d3249da.c.eco-emissary-99515.internal
+    certificate_cn: "{{ ansible_fqdn }}"
+
 - name: apt | certificate packages dependencies
   apt: name={{item}} state=present update_cache=yes cache_valid_time=3600
   with_items:
@@ -12,6 +21,12 @@
 
 #- set_fact:
 #    certificate_cn: "www.{{ ansible_fqdn }}"
+
+- name: ensure base directories exist
+  file: dest={{ item }} state=directory mode=0755
+  with_items:
+    - "{{ ssl_privatedir }}"
+    - "{{ ssl_dir }}"
 
 - block:
     - name: creating letsencrypt user key
@@ -64,6 +79,17 @@
   when: le_challenge|changed
 
 - meta: flush_handlers
+- name: ensure nginx is up for letsencrypt validation
+  service: name=nginx state=started
+
+- debug: msg="http://{{ jitsi_meet_server_name }}/{{ le_challenge['challenge_data'][ certificate_cn ]['http-01']['resource'] }}"
+- name: Wait for link to be up before proceeding.
+  shell: "curl -v --max-time 5 http://{{ jitsi_meet_server_name }}/{{ le_challenge['challenge_data'][ certificate_cn ]['http-01']['resource'] }}"
+  register: result
+  until: (result.stdout.find("HTTP/1.1 200 OK") == -1)
+  retries: 10
+  delay: 3
+  changed_when: false
 
 ## Note: validation is over http... can't remove http before this task.
 - name: validate letsencrypt challenge
