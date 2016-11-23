@@ -1,8 +1,4 @@
-require 'serverspec'
-
-# Required by serverspec
-set :backend, :exec
-
+require 'spec_helper'
 
 describe package('jitsi-meet') do
   it { should be_installed }

@@ -6,6 +6,7 @@
     owner: root
     group: root
     mode: "0644"
+    backup: yes
   notify: restart jicofo
 
 - name: Copy Jitsi Videobridge config file.
@@ -15,6 +16,7 @@
     owner: root
     group: root
     mode: "0644"
+    backup: yes
   notify: restart jitsi-videobridge
 
 - name: Set Jicofo log level.
@@ -23,4 +25,5 @@
     regexp: '^\.level'
     line: ".level={{ jitsi_meet_jicofo_loglevel }}"
     state: present
+    backup: yes
   notify: restart jicofo

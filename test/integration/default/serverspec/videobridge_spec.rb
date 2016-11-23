@@ -1,7 +1,4 @@
-require 'serverspec'
-
-# Required by serverspec
-set :backend, :exec
+require 'spec_helper'
 
 
 # This is actually the port for the "jicofo" service; the jitsi-meet manual

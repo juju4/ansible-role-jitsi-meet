@@ -8,6 +8,7 @@
     mode: "0644"
     # Simply syntax check for validation, doesn't catch config errors.
     validate: "luac -p %s"
+    backup: yes
   notify: restart prosody
 
 - name: Symlink Prosody config by domain name.

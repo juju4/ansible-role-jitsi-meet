@@ -47,7 +47,8 @@
         jitsi_meet_ssl_key_path: "{{ ssl_privatedir }}/localhost.key"
   when: jitsi_meet_ssl_cert_path == '' and
         jitsi_meet_ssl_key_path == '' and
-        jitsi_meet_ssl_generate == ''
+        jitsi_meet_ssl_generate == '' and
+        jitsi_meet_server_name == 'localhost'
 
 - include: packages.yml
 
@@ -62,6 +63,8 @@
 - include: jicofo.yml
 
 - include: nginx.yml
+
+- include: custom.yml
 
 - include: clean_up_default_configs.yml
   when: jitsi_meet_ssl_cert_path != '' and

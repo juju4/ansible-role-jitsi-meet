@@ -1,9 +1,17 @@
+{# part of jitsi default package but also in geerlingguy.nginx /etc/nginx.conf ... duplicates #}
 server_names_hash_bucket_size 64;
 
 server {
     listen 80;
     server_name {{ jitsi_meet_server_name }};
-    return 301 https://$host:{{ jitsi_meet_nginx_https_port }}$request_uri;
+    root /var/www;
+    ## rule to allow letsencrypt http challenge validation
+    location ~ /\.well-known/acme-challenge {
+        allow all;
+    }
+    location / {
+        return 301 https://$host:{{ jitsi_meet_nginx_https_port }}$request_uri;
+    }
 }
 server {
     listen {{ jitsi_meet_nginx_https_port }} ssl;
@@ -15,10 +23,11 @@ server {
 
     server_tokens off;
     add_header Strict-Transport-Security "max-age=31536000";
-#    add_header X-Content-Type-Options nosniff;
-#    add_header X-Frame-Options SAMEORIGIN;
-#    add_header X-XSS-Protection "1; mode=block";
-#    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';";
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-XSS-Protection "1; mode=block";
+## app.bundle.min.js: unsafe-eval; welcome page: unsafe-inline
+    add_header Content-Security-Policy "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' http://www.w3.org http://schema.org http://ogp.me; font-src 'self'; ";
 
     ssl_certificate {{ jitsi_meet_ssl_cert_path }};
     ssl_certificate_key {{ jitsi_meet_ssl_key_path }};
@@ -30,6 +39,21 @@ server {
         alias /etc/jitsi/meet/{{ jitsi_meet_server_name }}-config.js;
     }
 
+{% if jitsi_meet_customized_welcome is defined and jitsi_meet_customized_welcome %}
+#    rewrite ^\/$ https://{{ jitsi_meet_server_name }}:{{ jitsi_meet_nginx_https_port }}/welcome/ break ;
+    rewrite ^(/)$ https://{{ jitsi_meet_server_name }}:{{ jitsi_meet_nginx_https_port }}/welcome/ break ;
+    location /welcome/ {
+        # customized welcome page
+        alias /var/www/welcome/ ;
+        index {{ jitsi_meet_customized_welcome_filepath | basename }};
+    }
+
+{% endif %}
+{% if jitsi_meet_customized_interface_config is defined and jitsi_meet_customized_interface_config %}
+    location = /interface_config.js {
+        alias /var/www/jitsi-custom/interface_config.js ;
+    }
+{% endif %}
     location ~ ^/([a-zA-Z0-9=\?]+)$ {
         rewrite ^/(.*)$ / break;
     }

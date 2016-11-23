@@ -1,0 +1,98 @@
+<!-- check /usr/share/jitsi-meet/index.html for original file -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Parlons-nous - Visioconférence</title>
+  <meta charset="utf-8" />
+    <!--#include virtual="base.html" -->
+    <script>
+        window.indexLoadedTime = window.performance.now();
+        console.log("(TIME) index.html loaded:\t", indexLoadedTime);
+    </script>
+    <script><!--#include virtual="/config.js" --></script><!-- adapt to your needs, i.e. set hosts and bosh path -->
+    <script src="/config.js"></script>
+    <script src="/utils.js?v=1"></script>
+    <!--#include virtual="connection_optimization/connection_optimization.html" -->
+    <script src="/connection_optimization/do_external_connect.js?v=1"></script>
+    <script><!--#include virtual="/interface_config.js" --></script>
+    <script src="/interface_config.js"></script>
+    <script src="/libs/lib-jitsi-meet.min.js?v=1338"></script>
+    <script src="/libs/app.bundle.min.js?v=1338"></script>
+    <!--#include virtual="title.html" -->
+    <link rel="stylesheet" href="/css/all.css?v=1338"/>
+    <!--#include virtual="plugin.head.html" -->
+</head>
+<body>
+  <div class="container ombre">
+    <header role="banner">
+      <h1><b class="violet">Frama</b><b class="vert" lang="en">talk</b></h1>
+      <p class="lead">Visioconférence</p>
+    </header>
+
+    <main>
+
+      <div class="row">
+
+        <div class="col-md-12">
+
+          <div class="col-md-8">
+              <form id="create-talk">
+                <label for="talk-name" class="sr-only">Nom du salon</label>
+<!--
+            <div id="enter_room_container">
+                    <div id="enter_room_form" >
+                        <div id="domain_name"></div>
+                        <div id="enter_room">
+                            <input id="enter_room_field" type="text" autofocus/>
+                            <div class="icon-reload" id="reload_roomname"></div>
+                            <input id="enter_room_button" type="button" data-i18n="[value]welcomepage.go" value="GO" />
+
+                        </div>
+                    </div>
+            </div>
+-->
+                <div class="input-group input-group-lg talk-options" id="create-talk">
+                  <span class="input-group-addon">https://framatalk.org/</span>
+                  <input type="text" id="talk-name" class="form-control talk-name" value="" pattern="[a-zA-Z0-9=\?]+" aria-describeby="talkRegex"/>
+                  <span class="input-group-btn">
+                    <button class="btn btn-lg btn-primary talk-create" type="submit">Créer<span class="sr-only"> un salon</span></button>
+                  </span>
+                </div>
+                <p class="help-block text-center"  id="talkRegex"><small>(le nom du salon ne doit contenir que des lettres et des chiffres)</small></p>
+                <a id="talk-url" href="https://framatalk.org/" class="hidden" rel="nofollow"></a>
+              </form>
+          </div>
+
+          <div class="col-md-4">
+              <p>
+                <b class="violet">Frama</b><b class="vert" lang="en">talk</b> vous permet de
+                discuter avec vos amis sans installation complexe de logiciel ni inscription.<br>
+                Vous discutez simplement, sans aucune analyse des données liées aux conversations.<br>
+                Tout se passe entre vous et vos amis, directement depuis votre navigateur web.
+              </p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+          <div class="col-md-8 col-md-offset-2">
+              <div class="alert alert-info text-center">
+                  <p><strong>Astuce</strong>&nbsp;: si votre conversation subit des ralentissements, c’est probablement un problème de bande passante (débit internet trop faible).</p>
+                  <p>Désactivez la vidéo (bouton <span class="glyphicon glyphicon-facetime-video"></span>) pour résoudre le problème ;)</p>
+              </div>
+          </div>
+      </div>
+
+        <div class="col-md-4" id="le-logiciel">
+          <h2>Le logiciel</h2>
+          <p class="text-center" role="presentation"><i class="glyphicon glyphicon-cloud"></i></p>
+          <p><b class="violet">Frama</b><b class="vert" lang="en">talk</b> repose sur le logiciel libre <a href="https://jitsi.org/meet/">Jitsi Meet</a>.</p>
+          <p>Il s’agit d’une instance parmi d’autres, <a href="https://meet.jit.si">les développeurs de Jitsi Meet proposent également la leur</a>.</p>
+          <p>Jitsi Meet est sous <a href="http://www.apache.org/licenses/LICENSE-2.0.html">licence Apache 2.0</a>.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+

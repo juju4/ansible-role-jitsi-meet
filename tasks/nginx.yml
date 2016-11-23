@@ -3,14 +3,22 @@
 - name: ensure nginx package is present
   package: name=nginx state=present
 
-- name: Copy Nginx config for Jitsi Meet domain.
-  template:
-    dest: "/etc/nginx/sites-available/{{ jitsi_meet_server_name }}.conf"
-    src: jitsi_meet_nginx.conf.j2
-    owner: root
-    group: root
-    mode: "0644"
-  notify: restart nginx
+- block:
+    - name: Copy Nginx config for Jitsi Meet domain.
+      template:
+        dest: "/etc/nginx/sites-available/{{ jitsi_meet_server_name }}.conf"
+        src: jitsi_meet_nginx.conf.j2
+        owner: root
+        group: root
+        mode: "0644"
+        backup: yes
+      notify: restart nginx
+    - name: Activate custom Jitsi Meet Nginx site.
+      file:
+        path: "/etc/nginx/sites-enabled/{{ jitsi_meet_server_name }}.conf"
+        src: "/etc/nginx/sites-available/{{ jitsi_meet_server_name }}.conf"
+        state: link
+      notify: restart nginx
   # Skip unless role was called with custom SSL certs
   when: jitsi_meet_ssl_cert_path != '' and
         jitsi_meet_ssl_key_path != ''
@@ -21,9 +29,3 @@
     state: absent
   notify: restart nginx
 
-- name: Activate custom Jitsi Meet Nginx site.
-  file:
-    path: "/etc/nginx/sites-enabled/{{ jitsi_meet_server_name }}.conf"
-    src: "/etc/nginx/sites-available/{{ jitsi_meet_server_name }}.conf"
-    state: link
-  notify: restart nginx

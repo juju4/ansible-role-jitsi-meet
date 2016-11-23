@@ -1,7 +1,4 @@
-require 'serverspec'
-
-# Required by serverspec
-set :backend, :exec
+require 'spec_helper'
 
 
 ssl_keypairs = [

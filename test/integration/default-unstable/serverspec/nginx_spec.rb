@@ -1,9 +1,9 @@
-require 'serverspec'
-
-# Required by serverspec
-set :backend, :exec
+require 'spec_helper'
 
 nginx_https_port = 22443
+local_hostname = 'localhost'
+## NOK, get hostname of system executing rspec...
+#local_hostname = Socket.gethostbyname(Socket.gethostname).first 
 
 describe package('nginx'), :if => os[:family] == 'ubuntu' && os[:release] == '16.04' do
   it { should be_installed }
@@ -14,15 +14,15 @@ describe package('nginx'), :if => os[:family] == 'ubuntu' && os[:release] == '14
   its('version') { should >= '1.4.6' }
 end
 
-describe file('/etc/nginx/sites-available/localhost.conf') do
+describe file("/etc/nginx/sites-available/#{local_hostname}.conf") do
   it { should be_file }
   its('owner') { should eq 'root' }
   its('group') { should eq 'root' }
   its('mode') { should eq '644' }
 
   ssl_regexes = [
-    %r{^\s+ssl_certificate /var/lib/prosody/localhost.crt;$},
-    %r{^\s+ssl_certificate_key /var/lib/prosody/localhost.key;$}
+    %r{^\s+ssl_certificate /var/lib/prosody/#{local_hostname}.crt;$},
+    %r{^\s+ssl_certificate_key /var/lib/prosody/#{local_hostname}.key;$}
   ]
   ssl_regexes.each do |ssl_regex|
     its('content') { should match(ssl_regex) }
