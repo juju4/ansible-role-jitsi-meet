@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative 'spec_helper'
 
 if ENV.has_key?('SERVERSPEC_JITSI_CUSTOM')
 

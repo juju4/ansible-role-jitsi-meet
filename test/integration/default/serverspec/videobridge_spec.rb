@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative 'spec_helper'
 
 
 # This is actually the port for the "jicofo" service; the jitsi-meet manual

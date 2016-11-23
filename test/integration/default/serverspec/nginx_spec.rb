@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative 'spec_helper'
 
 nginx_https_port = 22443
 local_hostname = 'localhost'
