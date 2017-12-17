@@ -5,5 +5,5 @@
 #    - jitsi_meet_server_name: "{{ ansible_fqdn }}"
     - jitsi_meet_server_name: "localhost"
   roles:
-    - role: ansible-role-jitsi-meet
-
+#    - ansible-role-jitsi-meet
+    - freedomofpress.jitsi-meet
