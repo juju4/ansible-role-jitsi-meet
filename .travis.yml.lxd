@@ -12,17 +12,28 @@ env:
 #    version: 7
   - distribution: ubuntu
     version: 16.04
-  - distribution: ubuntu
-    version: 14.04
+    ansible_version: 2.4.0.0
+    cryptography_version: 2.1.1
+## java8 required
+#  - distribution: ubuntu
+#    version: 14.04
+#    ansible_version: 2.4.0.0
+#    cryptography_version: 2.0.3
 #  - distribution: ubuntu
 #    version: 12.04
 #  - distribution: alpine
 #    version: 3.4
+## past ansible versions
+  - distribution: ubuntu
+    version: 16.04
+    ansible_version: 2.3.2.0
+    cryptography_version: 2.1.1
 
 before_install:
   - env
   - pwd
   - find -ls
+  - cp -R ../ansible-role-jitsi-meet ../freedomofpress.jitsi-meet
 ## No Xenial, https://github.com/travis-ci/travis-ci/issues/5821
 #  - sudo apt install lxd
   - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee /etc/apt/sources.list.d/trusty-backports.list
@@ -57,7 +68,9 @@ before_install:
   - '[ "X${distribution}" == "Xcentos" -a "X${version}" == "X7" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-8.noarch.rpm" || true'
   - '[ "X${distribution}" == "Xcentos" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- yum update" || true'
   - '[ "X${distribution}" == "Xcentos" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- yum -y install python python-pip openssl-devel python-devel libffi-devel \"@Development tools\"" || true'
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install ansible"
+  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install --upgrade pip"
+  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install cryptography==${cryptography_version}"
+  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install ansible==${ansible_version}"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ansible --version"
   - "echo localhost > inventory"
 ## enable ansible profiling (https://github.com/jlafon/ansible-profile)
@@ -70,9 +83,11 @@ before_install:
   - sudo -E su $USER -c "lxc config show run-${distribution}-${version//./}"
 ## FIXME! awk extraction is working in shell but not in travis... relying on global chmod as test ephemeral environment. DON'T USE IN PRODUCTION!
   - sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | awk -F'[\":,]' '/Hostid/ { print $13 }'"
-  - CUID=`sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | awk -F'[\":,]' '/Hostid/ { print $13 }'"`
+  - sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | sed -ne '/idmap.next/ s/.*\"Hostid\":\([0-9]*\),.*/\1/p'"
+#  - CUID=`sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | awk -F'[\":,]' '/idmap.next.*Hostid/ { print $13 }'"`
+  - CUID=`sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | sed -ne '/idmap.next/ s/.*\"Hostid\":\([0-9]*\),.*/\1/p'"`
   - "echo setfacl -Rm user:$CUID:rwx ${PWD%/*}"
-  - "setfacl -Rm user:$CUID:rwx ${PWD%/*}"
+  - "setfacl -Rm \"user:$CUID:rwx\" ${PWD%/*} || true"
   - sudo -E su $USER -c "lxc config device add run-${distribution}-${version//./} sharedroles disk path=/etc/ansible/roles source=${PWD%/*}"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- mount"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pwd"

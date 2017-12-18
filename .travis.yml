@@ -18,10 +18,11 @@ env:
     version: 16.04
     ansible_version: 2.7.6
     cryptography_version: 2.5
-  - distribution: ubuntu
-    version: 14.04
-    ansible_version: 2.7.6
-    cryptography_version: 2.3.1
+## java8 required
+#  - distribution: ubuntu
+#    version: 14.04
+#    ansible_version: 2.4.0.0
+#    cryptography_version: 2.0.3
 #  - distribution: ubuntu
 #    version: 12.04
 #  - distribution: alpine
