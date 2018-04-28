@@ -1,0 +1,15 @@
+---
+
+ssl_user: ssl-cert
+#ssl_dir: /etc/ssl
+#ssl_privatedir: /etc/ssl/private
+ssl_dir: /var/lib/prosody
+ssl_privatedir: /var/lib/prosody
+
+www_user: www-data
+apache_svc: nginx
+apache_confdir: /etc/nginx/conf.d
+apache_sitedir: /etc/nginx/sites-available
+apacheconf: /etc/nginx/nginx.conf
+apachedefault: /etc/nginx/sites-available/default
+
