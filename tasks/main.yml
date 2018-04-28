@@ -74,7 +74,7 @@
         not jitsi_meet_configure_nginx
 
 - include: ufw.yml
-  when: jitsi_meet_configure_firewall == true
+  when: jitsi_meet_configure_firewall == true and not (ansible_virtualization_type is defined and ansible_virtualization_type == "docker")
 
   # Placing the browser extensions last so the associated debugging tasks
   # that display URLs are visible near the end of the play.
