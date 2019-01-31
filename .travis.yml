@@ -12,16 +12,16 @@ env:
 #    version: 7
   - distribution: ubuntu
     version: 18.04
-    ansible_version: 2.5.2.0
-    cryptography_version: 2.2.2
+    ansible_version: 2.7.6
+    cryptography_version: 2.5
   - distribution: ubuntu
     version: 16.04
-    ansible_version: 2.5.2.0
-    cryptography_version: 2.1.1
+    ansible_version: 2.7.6
+    cryptography_version: 2.5
   - distribution: ubuntu
     version: 14.04
-    ansible_version: 2.4.4.0
-    cryptography_version: 2.0.3
+    ansible_version: 2.7.6
+    cryptography_version: 2.3.1
 #  - distribution: ubuntu
 #    version: 12.04
 #  - distribution: alpine
@@ -29,8 +29,8 @@ env:
 ## past ansible versions
   - distribution: ubuntu
     version: 16.04
-    ansible_version: 2.4.4.0
-    cryptography_version: 2.1.1
+    ansible_version: 2.6.12
+    cryptography_version: 2.5
 
 before_install:
   - env
