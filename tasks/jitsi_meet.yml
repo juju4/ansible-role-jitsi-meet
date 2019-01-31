@@ -15,6 +15,9 @@
     regexp: '^\.level'
     line: ".level={{ jitsi_meet_videobridge_loglevel }}"
     state: present
+    mode: '0644'
+    owner: root
+    group: root
     backup: yes
   notify: restart jitsi-videobridge
 
