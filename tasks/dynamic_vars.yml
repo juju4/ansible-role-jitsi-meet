@@ -8,6 +8,7 @@
                not jitsi_meet_videobridge_secret_result.stdout
   check_mode: no
   changed_when: false
+  no_log: true
 
 - name: Set fact for Jitsi Videobridge secret var.
   set_fact:
@@ -15,6 +16,7 @@
   # Permit custom secrets in the template; only set the var if no custom secret is declared.
   when: jitsi_meet_videobridge_secret is not defined or
         not jitsi_meet_videobridge_secret
+  no_log: true
 
 - name: Read Jicofo secret var.
   command: >
@@ -25,6 +27,7 @@
   check_mode: no
   failed_when: jitsi_meet_jicofo_secret_result.rc != 0 or
                not jitsi_meet_jicofo_secret_result.stdout
+  no_log: true
 
 - name: Set fact for Jitsi Videobridge secret var.
   set_fact:
@@ -32,6 +35,7 @@
   # Permit custom secrets in the template; only set the var if no custom secret is declared.
   when: jitsi_meet_jicofo_secret is not defined or
         not jitsi_meet_jicofo_secret
+  no_log: true
 
 - name: Read Jicofo user auth password var.
   command: >
@@ -42,6 +46,7 @@
   check_mode: no
   failed_when: jitsi_meet_jicofo_password_result.rc != 0 or
                not jitsi_meet_jicofo_password_result.stdout
+  no_log: true
 
 - name: Set fact for Jitsi user auth password var.
   set_fact:
@@ -49,3 +54,4 @@
   # Permit custom secrets in the template; only set the var if no custom secret is declared.
   when: jitsi_meet_jicofo_password is not defined or
         not jitsi_meet_jicofo_password
+  no_log: true
