@@ -2,6 +2,8 @@
 
 - name: ensure nginx package is present
   package: name=nginx state=present
+  register: pkg_result
+  until: pkg_result is success
 
 - block:
     - name: Copy Nginx config for Jitsi Meet domain.
@@ -28,4 +30,3 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
   notify: restart nginx
-

@@ -7,4 +7,3 @@
   roles:
 #    - ansible-role-jitsi-meet
     - freedomofpress.jitsi-meet
-

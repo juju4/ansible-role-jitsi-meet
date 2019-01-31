@@ -12,4 +12,3 @@ apache_confdir: /etc/nginx/conf.d
 apache_sitedir: /etc/nginx/sites-available
 apacheconf: /etc/nginx/nginx.conf
 apachedefault: /etc/nginx/sites-available/default
-

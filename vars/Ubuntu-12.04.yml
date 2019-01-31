@@ -11,4 +11,3 @@ apache_sitedir: /etc/nginx/sites-available
 apacheconf: /etc/nginx/nginx.conf
 apachedefault: /etc/nginx/sites-available/default
 hardenwebserver_rootdir: /var/www/html
-

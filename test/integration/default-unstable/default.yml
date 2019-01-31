@@ -7,4 +7,3 @@
     - jitsi_meet_use_nightly_apt_repo: true
   roles:
     - role: ansible-role-jitsi-meet
-

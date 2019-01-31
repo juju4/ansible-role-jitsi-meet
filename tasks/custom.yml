@@ -22,4 +22,3 @@
     - name: install customized interface_config.js
       copy: src={{ jitsi_meet_customized_interface_config_filepath }} dest=/var/www/jitsi-custom mode=0644
   when: jitsi_meet_customized_interface_config
-

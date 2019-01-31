@@ -3,6 +3,8 @@
   apt:
     name: ufw
     state: present
+  register: pkg_result
+  until: pkg_result is success
 
 - name: Specify allowed ports in firewall config.
   ufw:

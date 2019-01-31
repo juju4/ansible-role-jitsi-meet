@@ -2,7 +2,8 @@
 
 ## require ansible v2.2 for letsencrypt module
 
-- set_fact:
+- name: Default | set default certificate info
+  set_fact:
     hardenwebserver_certinfo: '/C=US/ST=CA/L=San Francisco/O=Ansible'
     hardenwebserver_certduration: 1095
 #    hardenwebserver_letsencrypt_acme_dir: 'https://acme-staging.api.letsencrypt.org/directory'
@@ -12,15 +13,14 @@
     certificate_cn: "{{ ansible_fqdn }}"
 
 - name: apt | certificate packages dependencies
-  apt: name={{item}} state=present update_cache=yes cache_valid_time=3600
-  with_items:
-    - ssl-cert
+  apt: name=ssl-cert state=present update_cache=yes cache_valid_time=3600
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  register: pkg_result
+  until: pkg_result is success
 - name: install deps
   package: name=openssl state=present
-
-#- set_fact:
-#    certificate_cn: "www.{{ ansible_fqdn }}"
+  register: pkg_result
+  until: pkg_result is success
 
 - name: ensure base directories exist
   file: dest={{ item }} state=directory mode=0755
@@ -43,7 +43,7 @@
             creates={{ ssl_privatedir }}/user.pub
     - name: ensure correct permissions of user key
       file: "dest={{ ssl_privatedir }}/user.key owner=root group={{ ssl_user }} mode=0440"
-  when: hardenwebserver_letsencrypt_user_key is not defined or hardenwebserver_letsencrypt_user_key == ''
+  when: hardenwebserver_letsencrypt_user_key is not defined or not hardenwebserver_letsencrypt_user_key
 
 - name: generate certificate csr to submit
   command: >
@@ -59,7 +59,14 @@
     curl https://letsencrypt.org/certs/isrgrootx1.pem
         https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
         https://letsencrypt.org/certs/lets-encrypt-x4-cross-signed.pem | tee {{ ssl_dir }}/ca-certs.pem > /dev/null
-    creates={{ ssl_dir }}/ca-certs.pem
+  args:
+    creates: "{{ ssl_dir }}/ca-certs.pem"
+- name: ensure root chain file not empty
+  stat: path={{ ssl_dir }}/ca-certs.pem
+  register: rootchain
+- name: failure
+  fail: msg="FATAL! root chain file generation fails."
+  when: not rootchain.stat.exists or rootchain.stat.size == 0
 
 - name: register letsencrypt challenge
   letsencrypt:
@@ -67,16 +74,12 @@
     csr: "{{ ssl_dir }}/{{ ansible_fqdn }}.csr"
     dest: "{{ ssl_dir }}/{{ ansible_fqdn }}.crt"
     acme_directory: "{{ hardenwebserver_letsencrypt_acme_dir }}"
-  register: le_challenge
+  notify:
+    - add public file to www dir to fullfill letsencrypt challenge
 
 #- debug: var=le_challenge
 - name: ensure letsencrypt directory exists
   file: "dest={{ hardenwebserver_rootdir }}/.well-known/acme-challenge state=directory mode=0755"
-- name: add public file to www dir to fullfill letsencrypt challenge
-  copy:
-     dest: "{{ hardenwebserver_rootdir }}/{{ le_challenge['challenge_data'][ certificate_cn ]['http-01']['resource'] }}"
-     content: "{{ le_challenge['challenge_data'][ certificate_cn ]['http-01']['resource_value'] }}"
-  when: le_challenge|changed
 
 - meta: flush_handlers
 - name: ensure nginx is up for letsencrypt validation
@@ -99,4 +102,3 @@
     dest: "{{ ssl_dir }}/{{ ansible_fqdn }}.crt"
     data: "{{ le_challenge }}"
     acme_directory: "{{ hardenwebserver_letsencrypt_acme_dir }}"
-
