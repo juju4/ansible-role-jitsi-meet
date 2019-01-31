@@ -12,7 +12,7 @@
 #  hostname: name={{ jitsi_meet_server_name }}
   command: "hostname {{ jitsi_meet_server_name }}"
 ## Not possible to set hostname inside unprivileged docker, https://stackoverflow.com/questions/31552455/setting-the-hostname-for-a-container-running-in-kubernetes
-  ignore_errors: true
+  when: not (ansible_virtualization_type is defined and ansible_virtualization_type == "docker")
 #- debug: var=ansible_fqdn
 - name: force to gather facts again to refresh ansible_fqdn
   action: setup
