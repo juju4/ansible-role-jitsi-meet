@@ -14,10 +14,11 @@ env:
     version: 16.04
     ansible_version: 2.4.0.0
     cryptography_version: 2.1.1
-  - distribution: ubuntu
-    version: 14.04
-    ansible_version: 2.4.0.0
-    cryptography_version: 2.0.3
+## java8 required
+#  - distribution: ubuntu
+#    version: 14.04
+#    ansible_version: 2.4.0.0
+#    cryptography_version: 2.0.3
 #  - distribution: ubuntu
 #    version: 12.04
 #  - distribution: alpine
@@ -32,6 +33,7 @@ before_install:
   - env
   - pwd
   - find -ls
+  - cp -R ../ansible-role-jitsi-meet ../freedomofpress.jitsi-meet
 ## No Xenial, https://github.com/travis-ci/travis-ci/issues/5821
 #  - sudo apt install lxd
   - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee /etc/apt/sources.list.d/trusty-backports.list
