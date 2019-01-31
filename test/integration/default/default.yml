@@ -2,8 +2,8 @@
 - name: Test jitsi-meet role
   hosts: all
   vars:
-    - jitsi_meet_server_name: "{{ ansible_fqdn }}"
-#    - jitsi_meet_server_name: "localhost"
+#    - jitsi_meet_server_name: "{{ ansible_fqdn }}"
+    - jitsi_meet_server_name: "localhost"
   roles:
 #    - ansible-role-jitsi-meet
     - freedomofpress.jitsi-meet
