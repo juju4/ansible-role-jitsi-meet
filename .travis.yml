@@ -118,6 +118,8 @@ after_failure:
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager --failed"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- journalctl -xe --no-pager"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ps aux"
+  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/hosts"
+  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- find /etc/prosody/certs/ -ls"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- find /etc/jitsi/ -ls"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/videobridge/logging.properties"
   - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/videobridge/config"
