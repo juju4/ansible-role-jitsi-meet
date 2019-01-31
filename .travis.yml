@@ -2,7 +2,7 @@
 dist: trusty
 sudo: required
 rvm:
-  - 2.4
+  - 2.5
 
 env:
 ## those images need pre-configuration before being usable (openssh...)
