@@ -1,8 +1,8 @@
 ---
-dist: trusty
+dist: xenial
 sudo: required
 rvm:
-  - 2.5
+  - 2.6
 
 env:
 ## those images need pre-configuration before being usable (openssh...)
@@ -12,26 +12,14 @@ env:
 #    version: 7
   - distribution: ubuntu
     version: 18.04
-    ansible_version: 2.7.6
-    cryptography_version: 2.5
   - distribution: ubuntu
     version: 16.04
-    ansible_version: 2.7.6
-    cryptography_version: 2.5
-## java8 required
 #  - distribution: ubuntu
 #    version: 14.04
-#    ansible_version: 2.4.0.0
-#    cryptography_version: 2.0.3
 #  - distribution: ubuntu
 #    version: 12.04
 #  - distribution: alpine
 #    version: 3.4
-## past ansible versions
-  - distribution: ubuntu
-    version: 16.04
-    ansible_version: 2.6.12
-    cryptography_version: 2.5
 
 before_install:
   - env
@@ -39,101 +27,84 @@ before_install:
   - find -ls
 ## use appropriate role path and not github name
   - "[ -f get-dependencies.sh ] && sh -x get-dependencies.sh"
-## No Xenial, https://github.com/travis-ci/travis-ci/issues/5821
-#  - sudo apt install lxd
-  - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee /etc/apt/sources.list.d/trusty-backports.list
+  - echo "deb http://archive.ubuntu.com/ubuntu xenial-backports main restricted universe multiverse" | sudo tee /etc/apt/sources.list.d/xenial-backports.list
   - sudo apt-get update -qq
-  - sudo apt -t trusty-backports -y install lxd acl rng-tools -q
+  - sudo apt -t xenial-backports -y install lxd acl dnsmasq-base zfsutils-linux -q
 ## change of group implies logout+login to apply... can't do with travis = run as root (sic)    = use 'newgrp lxd' ? = travis stalling all ...
 ## https://github.com/travis-ci/travis-ci/issues/1839   or chain: sudo -E su $USER -c "..."
   - sudo usermod -G lxd travis
-#  - newgrp lxd
   # Pull container
+#  - lxc remote add images images.linuxcontainers.org
   - sudo -E su $USER -c "lxc remote list"
   - sudo -E su $USER -c "lxc image list"
 ## pre-download base images
-  - 'sudo -E su $USER -c "[ ${distribution} == ubuntu ] || lxc image copy images:${distribution}/${version}/amd64 local: --alias=${distribution}-${version}"'
+  - 'sudo -E su $USER -c "[ ${distribution} == ubuntu ] || lxc image copy images:${distribution}/${version}/amd64 local: --alias=${distribution}-${version}-nossh"'
   - 'sudo -E su $USER -c "[ ${distribution} == ubuntu ] && lxc image copy ubuntu:${version} local: --alias=${distribution}-${version}" || true'
-## configure lxd-bridge
-  - sudo perl -pi -e 's@^LXD_IPV4_ADDR=""@LXD_IPV4_ADDR="10.252.116.1"@;s@^LXD_IPV4_NETMASK=""@LXD_IPV4_NETMASK="255.255.255.0"@;s@^LXD_IPV4_NETWORK=""@LXD_IPV4_NETWORK="10.252.116.1/24"@;s@^LXD_IPV4_DHCP_RANGE=""@LXD_IPV4_DHCP_RANGE="10.252.116.2,10.252.116.254"@;s@^LXD_IPV4_DHCP_MAX=""@LXD_IPV4_DHCP_MAX="252"@;s@LXD_IPV6_PROXY="true"@LXD_IPV6_PROXY="false"@' /etc/default/lxd-bridge
-#  - cat /etc/default/lxd-bridge
-#  - service --status-all
+## configure network
+  - ifconfig -a
+  - sudo lxc info
+  - sudo lxc network list
+  - sudo lxc network create lxdbr0
+  - sudo lxc network show lxdbr0
+  - sudo lxc network attach-profile lxdbr0 default ens4
+  - sudo lxc profile device get default ens4 nictype || true
   - sudo service lxd restart
+  - ps ax | grep dnsmasq
+  - systemctl status -l --no-pager lxd || true
+  - cat /etc/network/interfaces.d/50-cloud-init.cfg
+  - sudo lxc network list
+# configure storage pool
+  - sudo lxc storage list
+  - sudo lxc storage create pool1 zfs
+  - sudo lxc storage list
+  - sudo zpool list
+  - sudo lxc profile device add default root disk path=/ pool=pool1
+  - sudo lxc profile show default
+
+  - sudo pip install ansible
+  - gem install kitchen
+  - gem install kitchen-ansible
+  - gem install kitchen-sync
+  - gem install kitchen-lxd_cli
+  - gem list
+  - which kitchen
 ## ssh key for lxd_cli ?
   - ls ~/.ssh
   - ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -P ""
 ## sudo/su get us a non-usual PATH ...
-  - sudo -E su $USER -c "lxc launch ${distribution}-${version} run-${distribution}-${version//./}"
-#  - sudo -E su $USER -c "lxc start run-${distribution}-${version//./}"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- env"
-  - '[ "X${distribution}" != "Xalpine" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- dhclient eth0" || true'
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ping -c 1 8.8.8.8"
-  - '[ "X${distribution}" == "Xubuntu" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- apt-get update" || true'
-  - '[ "X${distribution}" == "Xubuntu" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- apt-get -y install python python-apt aptitude python-pip libssl-dev python-dev libffi-dev" || true'
-  - '[ "X${distribution}" == "Xcentos" -a "X${version}" == "X6" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- rpm -iUvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm" || true'
-  - '[ "X${distribution}" == "Xcentos" -a "X${version}" == "X7" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-10.noarch.rpm" || true'
-  - '[ "X${distribution}" == "Xcentos" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- yum update" || true'
-  - '[ "X${distribution}" == "Xcentos" ] && sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- yum -y install python python-pip openssl-devel python-devel libffi-devel \"@Development tools\"" || true'
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install --upgrade pip"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install cryptography==${cryptography_version}"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pip install ansible==${ansible_version}"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ansible --version"
-  - "echo localhost > inventory"
-## enable ansible profiling (https://github.com/jlafon/ansible-profile)
-#  - "printf '[defaults]\ncallback_whitelist = profile_tasks' > ansible.cfg"
-#  - sudo -E su $USER -c "lxc file push inventory ansible.cfg run-${distribution}-${version//./}/root/"
-  - sudo -E su $USER -c "lxc file push inventory run-${distribution}-${version//./}/root/"
-## these lines are necessary so lxc mount is read-write, https://github.com/lxc/lxd/issues/1879
-  - chmod -R go+w $PWD
-## OR
-  - sudo -E su $USER -c "lxc config show run-${distribution}-${version//./}"
-## FIXME! awk extraction is working in shell but not in travis... relying on global chmod as test ephemeral environment. DON'T USE IN PRODUCTION!
-  - sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | awk -F'[\":,]' '/Hostid/ { print $13 }'"
-  - sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | sed -ne '/idmap.next/ s/.*\"Hostid\":\([0-9]*\),.*/\1/p'"
-#  - CUID=`sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | awk -F'[\":,]' '/idmap.next.*Hostid/ { print $13 }'"`
-  - CUID=`sudo -E su $USER -c "lxc config show run-${distribution}-${version//./} | sed -ne '/idmap.next/ s/.*\"Hostid\":\([0-9]*\),.*/\1/p'"`
-  - "echo setfacl -Rm user:$CUID:rwx ${PWD%/*}"
-  - "setfacl -Rm \"user:$CUID:rwx\" ${PWD%/*} || true"
-  - sudo -E su $USER -c "lxc config device add run-${distribution}-${version//./} sharedroles disk path=/etc/ansible/roles source=${PWD%/*}"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- mount"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- pwd"
+  - '[ "X${distribution}" == "Xcentos" ] && sudo -E su $USER -c "sh -x ./test/lxd/centos-ssh-image.sh" || true'
+  - sudo -E su $USER -c "env"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen diagnose --all"
+#  - sudo -E su $USER -c "kitchen diagnose --all"
+#  - sudo -E -u $USER kitchen diagnose --all
 
 script:
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ansible-playbook -i inventory --syntax-check /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/default.yml"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ansible-playbook -i inventory --connection=local --become -vvvv /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/default.yml"
-## FIXME! Travis request: Build config file had a parse error: "mapping values are not allowed in this context at line 72 column 321".
-#  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ansible-playbook -i inventory /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/default.yml --connection=local --become | tee /tmp/idempotency.log | grep -q 'changed=0.*failed=0'  && (echo 'Idempotence test: pass' && exit 0) || (echo 'Idempotence test: fail' && cat /tmp/idempotency.log && exit 1)"
-## known fail
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ansible-playbook -i inventory --connection=local --become /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/default.yml" > /tmp/idempotency.log
-  - "grep -q 'changed=0.*failed=0' /tmp/idempotency.log && (echo 'Idempotence test: pass' && exit 0) || (echo 'Idempotence test: fail' && cat /tmp/idempotency.log && exit 0)"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- time sh -x /etc/ansible/roles/ansible-role-jitsi-meet/test/integration/default/serverspec/run-local-tests.sh"
-
-after_failure:
-  # Check what happened on systemd systems.
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager status nginx"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager status prosody"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager status jicofo"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager status jitsi-videobridge"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager status"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- systemctl -l --no-pager --failed"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- journalctl -xe --no-pager"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ps aux"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- netstat -tunap"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/hosts"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- find /etc/prosody/certs/ -ls"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- find /etc/jitsi/ -ls"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/videobridge/logging.properties"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/videobridge/config"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/jicofo/logging.properties"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/jicofo/config"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- cat /etc/jitsi/videobridge/sip-communicator.properties"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- ls -lA /var/log/jitsi/"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- tail -200 /var/log/jitsi/jicofo.log"
-  - sudo -E su $USER -c "lxc exec run-${distribution}-${version//./} -- tail -200 /var/log/jitsi/jvb.log"
+  - ansible-lint tasks/main.yml || true
+#  - KITCHEN_LOCAL_YAML=.kitchen.local.yml bundle exec kitchen verify ${INSTANCE}
+  - sudo -E su $USER -c "env PATH=$PATH kitchen verify default-${distribution}-${version//./} -l debug || (cat $HOME/.kitchen/logs/default-${distribution}-${version//./}.log; find /tmp/kitchen)"
 
 after_script:
-  - sudo -E su $USER -c "lxc stop run-${distribution}-${version//./} --force"
-  - sudo -E su $USER -c "lxc delete run-${distribution}-${version//./}"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'systemctl -l --no-pager status nginx'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'systemctl -l --no-pager status prosody'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'systemctl -l --no-pager status jicofo'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'systemctl -l --no-pager status jitsi-videobridge'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'systemctl -l --no-pager status'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'systemctl -l --no-pager --failed'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'journalctl -xe --no-pager'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'ps aux'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'netstat -tunap'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'cat /etc/hosts'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'find /etc/prosody/certs/ -ls'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'find /etc/jitsi/ -ls'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'cat /etc/jitsi/videobridge/logging.properties'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'cat /etc/jitsi/videobridge/config'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'cat /etc/jitsi/jicofo/logging.properties'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'cat /etc/jitsi/jicofo/config'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'cat /etc/jitsi/videobridge/sip-communicator.properties'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'ls -lA /var/log/jitsi/'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'tail -200 /var/log/jitsi/jicofo.log'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen exec ${suite}-${distribution}-${version//./} -c 'tail -200 /var/log/jitsi/jvb.log'"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen destroy ${suite}-${distribution}-${version//./} -l debug || (cat $HOME/.kitchen/logs/${suite}-${distribution}-${version//./}.log; find /tmp/kitchen)"
 
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/
