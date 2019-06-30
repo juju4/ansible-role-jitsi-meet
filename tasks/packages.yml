@@ -45,6 +45,8 @@
     cache_valid_time: 3600
   register: pkg_result
   until: pkg_result is success
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Set debconf options for jitsi-meet.
   debconf:
