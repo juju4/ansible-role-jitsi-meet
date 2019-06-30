@@ -1,26 +1,27 @@
 ---
-dist: trusty
+dist: xenial
 language: python
-python: "2.7"
+
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq python-apt python-pycurl
  - ln -s ansible-role-jitsi-meet ../freedomofpress.jitsi-meet
 # - ./get-dependencies.sh
-## for local travis execution as we use same default.yml than kitchen
- - mkdir /tmp/kitchen
 ## serverspec test
- - sudo apt-get install -qq ruby2.0 rake
- - sudo gem2.0 install serverspec
+ - sudo apt-get install -qq ruby rake
+ - sudo gem install serverspec
+
 install:
-  - pip install ansible
+  - pip install ansible ansible-lint
   - ansible --version
-  - "{ echo '[defaults]'; echo 'roles_path = ../'; } >> ansible.cfg"
-  - gem2.0 --version
+  - "{ echo '[defaults]'; echo 'callback_whitelist = profile_tasks, timer'; echo 'roles_path = ../'; } >> ansible.cfg"
+  - gem --version
+
 script:
-  - "echo \"[test-kitchen]\nlocalhost\" > inventory"
+  - "echo \"localhost\" > inventory"
 
 # Check the role/playbook's syntax.
+  - "ansible-lint tasks/main.yml || true"
   - "ansible-playbook -i inventory --syntax-check test/integration/default/default.yml"
 
 # Run the role/playbook with ansible-playbook.
@@ -33,3 +34,13 @@ script:
 # Serverspec
 #  - "test/integration/default/serverspec/run-local-tests.sh"
   - "cd test/integration/default/serverspec/ && bundle exec rake spec"
+
+after_script:
+  - ps axuw
+  - sudo netstat -anp
+  - sudo ss -nlp
+  - systemctl -l --no-pager status nginx
+  - systemctl -l --no-pager status prosody
+  - systemctl -l --no-pager status jitsi-videobridge
+  - systemctl -l --no-pager status
+  - sudo journalctl -xe --no-page
