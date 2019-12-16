@@ -44,3 +44,4 @@ after_script:
   - systemctl -l --no-pager status jitsi-videobridge
   - systemctl -l --no-pager status
   - sudo journalctl -xe --no-page
+  - ansible -i inventory --connection=local -m setup localhost
